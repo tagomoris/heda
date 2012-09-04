@@ -102,7 +102,7 @@ sub config {
     elsif ($param eq 'hedaDatabaseUsername') { $self->{database}->{username} = $value; }
     elsif ($param eq 'hedaDatabasePassword') { $self->{database}->{password} = $value; }
     elsif ($param eq 'hedaLogPath') {           $self->{log}->{path} = $value; }
-    elsif ($param eq 'hedaLogLevel') { $self->{loglevel} = $value; }
+    elsif ($param eq 'hedaLogLevel') { $self->{loglevel} = uc($value); }
     else {
         die "unknown config parameter name $param, value $value";
     }
