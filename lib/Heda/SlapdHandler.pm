@@ -4,7 +4,10 @@ use 5.014;
 use English;
 use utf8;
 
-use File::RotateLogs;
+use File::Basename qw//;
+use lib File::Basename::dirname(__FILE__) . "/../../extlib/lib/perl5";
+
+use File::Stamped;
 use Log::Minimal;
 
 use Net::LDAP::Filter;
@@ -18,7 +21,7 @@ sub new {
     return bless +{
         suffix => undef,
         database => +{ dsn => undef, username => undef, password => '' },
-        log => +{ path => undef, rotationtime => 86400, maxage => 86400 * 45 },
+        log => +{ path => '/var/log/heda.%Y%m' },
         # loglevel => 'WARN';
         loglevel => 'INFO',
     }, $klass;
@@ -99,9 +102,6 @@ sub config {
     elsif ($param eq 'hedaDatabaseUsername') { $self->{database}->{username} = $value; }
     elsif ($param eq 'hedaDatabasePassword') { $self->{database}->{password} = $value; }
     elsif ($param eq 'hedaLogPath') {           $self->{log}->{path} = $value; }
-    elsif ($param eq 'hedaLogSymlinkName') {    $self->{log}->{linkname} = $value; }
-    elsif ($param eq 'hedaLogRotationTime') {   $self->{log}->{rotationtime} = int($value); }
-    elsif ($param eq 'hedaLogExpirationTime') { $self->{log}->{maxage} = int($value); }
     elsif ($param eq 'hedaLogLevel') { $self->{loglevel} = $value; }
     else {
         die "unknown config parameter name $param, value $value";
@@ -115,7 +115,8 @@ sub init {
 
     die "'hedaLogPath' not configured" unless defined $self->{log}->{path};
 
-    $self->{logger} = File::RotateLogs->new( %{$self->{log}} );
+    my $fh = File::Stamped->new(pattern => $self->{log}->{path});
+    $self->{logfh} = $fh;
 
     $Log::Minimal::LOG_LEVEL = $self->{loglevel};
     $ENV{LM_DEBUG} = 1 if $self->{loglevel} eq 'DEBUG';
@@ -123,7 +124,7 @@ sub init {
     $Log::Minimal::AUTODUMP = 1;
     $Log::Minimal::PRINT = sub {
         my ( $time, $type, $message, $trace, $raw_message) = @_;
-        $self->{logger}->print("$time [$type] ($PID) $message at $trace\n");
+        print {$fh} "$time [$type] ($PID) $message at $trace\n";
     };
     $Log::Minimal::DIE = sub {
         my ( $time, $type, $message, $trace, $raw_message) = @_;
