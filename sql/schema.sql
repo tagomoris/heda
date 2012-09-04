@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS heda.users (
   salt        VARCHAR(40)  NOT NULL,  -- SHA1(rand())
   valid       SMALLINT     DEFAULT 0,
   superuser   SMALLINT     DEFAULT 0,
+  accounts    TEXT         DEFAULT '',
+  memo        TEXT         DEFAULT '',
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   modified_at TIMESTAMP    NOT NULL DEFAULT '0000-00-00 00:00:00',
   KEY users_authenticate (passhash,username)

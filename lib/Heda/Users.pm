@@ -2,7 +2,6 @@ package Heda::Users;
 
 use 5.014;
 use utf8;
-use Carp;
 use Log::Minimal;
 
 use DBIx::Sunny;
@@ -28,8 +27,9 @@ sub dbh {
     Scope::Container::DBI->connect( $self->{dsn}, $self->{username}, $self->{password} );
 }
 
-# our @FULL_COLUMNS = qw(id subid username passhash fullname mailaddress salt valid superuser created_at modified_at);
+# our @FULL_COLUMNS = qw(id subid username passhash fullname mailaddress salt valid superuser accounts memo created_at modified_at);
 our $COLUMNS_VIEW = 'id,subid,username,fullname,mailaddress,valid,superuser';
+our $COLUMNS_FULL = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo';
 our $COLUMNS_AUTH = 'id,subid,username,fullname,mailaddress,valid,superuser,salt,passhash';
 
 sub all {
@@ -45,50 +45,45 @@ sub search {
     my $col;
     my $value;
     # id/username/subid are with 'UNIQUE' restriction
-    if (defined($args{id})) { $col = 'id';       $value = $args{id}; }
-    elsif ($args{username}) { $col = 'username'; $value = $args{username}; }
-    elsif ($args{subid}) {    $col = 'subid';    $value = $args{subid}; }
+    if (defined($args{id})) { $col = 'id';          $value = $args{id}; }
+    elsif ($args{username}) { $col = 'username';    $value = $args{username}; }
+    elsif ($args{subid}) {    $col = 'subid';       $value = $args{subid}; }
+    elsif ($args{mail}) {     $col = 'mailaddress'; $value = $args{mail}; }
     else {
-        croak 'Heda::Users search key missing id/subid/username';
+        croakf 'Heda::Users search key missing id/subid/username';
     }
+    my $columns = $COLUMNS_VIEW;
+    if ($args{auth}) {    $columns = $COLUMNS_AUTH; }
+    elsif ($args{full}) { $columns = $COLUMNS_FULL; }
+
     my $sql = <<"EOQ";
-SELECT $COLUMNS_VIEW FROM users WHERE $col=?
+SELECT $columns FROM users WHERE $col=?
 EOQ
-    if ($args{auth}) {
-        $sql = <<"EOQ";
-SELECT $COLUMNS_AUTH FROM users WHERE $col=?
-EOQ
-    }
     $self->dbh->select_row($sql, $value);
 }
 
-sub authenticate_by_username {
-    my ($self, $username, $password) = @_;
-    my $user = $self->search(username => $username, auth => 1);
+sub authenticate { # authenticate( fieldname => $value, password => $password_value )
+    my ($self, %args) = @_;
+    my %param;
+    if (defined $args{username}) { %param = ( username => $args{username}, auth => 1); }
+    elsif (defined $args{subid}) { %param = ( subid => $args{subid}, auth => 1); }
+    elsif (defined $args{mail}) {  %param = ( mail => $args{mail}, auth => 1); }
+    else {
+       croakf "valid field name to authenticate not specified: %s", \%args;
+    }
+    my $user = $self->search(%param);
     unless ($user) {
         # do dummy authentication to defend from process time inspection
-        my $dummypasshash = Digest::SHA::sha256_hex('dummysalt' . $password);
+        my $dummypasshash = Digest::SHA::sha256_hex('dummysalt' . $args{password});
         return undef;
     }
-    my $passhash = Digest::SHA::sha256_hex($user->{salt} . $password);
-    return $user->{passhash} eq $passhash;
-}
-
-sub authenticate_by_subid {
-    my ($self, $subid, $password) = @_;
-    my $user = $self->search(subid => $subid, auth => 1);
-    unless ($user) {
-        # do dummy authentication to defend from process time inspection
-        my $dummypasshash = Digest::SHA::sha256_hex('dummysalt' . $password);
-        return undef;
-    }
-    my $passhash = Digest::SHA::sha256_hex($user->{salt} . $password);
+    my $passhash = Digest::SHA::sha256_hex($user->{salt} . $args{password});
     return $user->{passhash} eq $passhash;
 }
 
 sub get {
     my ($self, $id) = @_;
-    $self->search(id => $id);
+    $self->search(id => $id, full => 1);
 }
 
 sub create {
@@ -115,11 +110,11 @@ EOQ
 }
 
 sub overwrite { # update informations by superuser, without password
-    my ($self, $id, $username, $fullname, $mailaddress, $subid, $superuser) = @_;
+    my ($self, $id, $username, $fullname, $mailaddress, $subid, $superuser, $accounts, $memo) = @_;
     my $sql = <<EOQ;
-UPDATE users SET username=?,fullname=?,mailaddress=?,subid=?,superuser=? WHERE id=?
+UPDATE users SET username=?,fullname=?,mailaddress=?,subid=?,superuser=?,accounts=?,memo=? WHERE id=?
 EOQ
-    $self->dbh->query($sql, $username, $fullname, $mailaddress, $subid, ($superuser ? 1 : 0), $id);
+    $self->dbh->query($sql, $username, $fullname, $mailaddress, $subid, ($superuser ? 1 : 0), $accounts, $memo, $id);
 }
 
 sub delete {
