@@ -98,8 +98,7 @@ sub parse {
 sub config {
     my ($self, $param, $value) = @_;
 
-    if ($param eq 'suffix') { $self->{suffix} = $value; }
-    elsif ($param eq 'hedaSuffix') { $self->{hedasuffix} = $value; }
+    if ($param eq 'hedaSuffix') { $self->{suffix} = $value; }
     elsif ($param eq 'hedaDsn') { $self->{database}->{dsn} = $value; }
     elsif ($param eq 'hedaDatabaseUsername') { $self->{database}->{username} = $value; }
     elsif ($param eq 'hedaDatabasePassword') { $self->{database}->{password} = $value; }
@@ -126,7 +125,12 @@ sub init {
     $Log::Minimal::AUTODUMP = 1;
     $Log::Minimal::PRINT = sub {
         my ( $time, $type, $message, $trace, $raw_message) = @_;
-        print {$fh} "$time [$type] ($PID) $message at $trace\n";
+        if ( $type eq 'INFO' ) {
+            print {$fh} "$time [$type] ($PID) $message";
+        }
+        else {
+            print {$fh} "$time [$type] ($PID) $message at $trace\n";
+        }
     };
     $Log::Minimal::DIE = sub {
         my ( $time, $type, $message, $trace, $raw_message) = @_;
@@ -136,7 +140,7 @@ sub init {
 
     infof "Initializing Heda::SlapdHandler...";
 
-    croakf "'suffix' not configured" unless defined $self->{suffix};
+    croakf "'hedaSuffix' not configured" unless defined $self->{suffix};
 
     croakf "'hedaDsn' not configured" unless defined $self->{database}->{dsn};
     croakf "'hedaDatabaseUsername' not configured" unless defined $self->{database}->{username};
