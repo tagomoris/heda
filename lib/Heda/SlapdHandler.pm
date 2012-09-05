@@ -130,7 +130,7 @@ sub init {
     };
     $Log::Minimal::DIE = sub {
         my ( $time, $type, $message, $trace, $raw_message) = @_;
-        $Log::Minimal::PRINT->( $time, $type, $message, $trace, $raw_message );
+        print {$fh} "$time [$type] ($PID) $message at $trace\n";
         die "$time [$type] ($PID) $message at $trace\n";
     };
 
