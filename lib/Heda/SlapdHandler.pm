@@ -1,6 +1,8 @@
 package Heda::SlapdHandler;
 
-use 5.014;
+# use 5.014;
+use strict;
+use warnings;
 use English;
 use utf8;
 
