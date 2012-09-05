@@ -1,8 +1,6 @@
 package Heda::Users;
 
-# use 5.014;
-use strict;
-use warnings;
+use 5.014;
 use utf8;
 use Log::Minimal;
 
