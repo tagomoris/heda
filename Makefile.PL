@@ -11,7 +11,6 @@ WriteMakefile(
         'URI' => 0,
         'Log::Minimal' => 0,
         'File::Stamped' => 0,
-        # 'File::RotateLogs' => 0,
         'Try::Tiny' => 0,
         'JSON::XS' => 0,
         'Time::Piece' => 0,
@@ -20,7 +19,6 @@ WriteMakefile(
         'DBI' => 0,
         'DBD::mysql' => 0,
         'DBIx::Sunny' => 0,
-        'Scope::Container::DBI' => 0,
         'Net::LDAP::Filter' => 0,
     },
     MIN_PERL_VERSION => '5.014001'
