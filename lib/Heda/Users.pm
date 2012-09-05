@@ -4,8 +4,9 @@ use 5.014;
 use utf8;
 use Log::Minimal;
 
+use DBI;
 use DBIx::Sunny;
-use Scope::Container::DBI;
+# use Scope::Container::DBI;
 
 use Digest::SHA qw//;
 
@@ -23,8 +24,13 @@ sub new {
 
 sub dbh {
     my $self = shift;
-    local $Scope::Container::DBI::DBI_CLASS = 'DBIx::Sunny';
-    Scope::Container::DBI->connect( $self->{dsn}, $self->{username}, $self->{password} );
+    # local $Scope::Container::DBI::DBI_CLASS = 'DBIx::Sunny';
+    # Scope::Container::DBI->connect( $self->{dsn}, $self->{username}, $self->{password} );
+    DBI->connect_cached( $self->{dsn}, $self->{username}, $self->{password}, {
+        RootClass => 'DBIx::Sunny',
+        PrintError => 0,
+        RaiseError => 1,
+    } );
 }
 
 # our @FULL_COLUMNS = qw(id subid username passhash fullname mailaddress salt valid superuser accounts memo created_at modified_at);
