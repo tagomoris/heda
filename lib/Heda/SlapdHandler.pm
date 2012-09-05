@@ -124,7 +124,7 @@ sub init {
     $Log::Minimal::PRINT = sub {
         my ( $time, $type, $message, $trace, $raw_message) = @_;
         if ( $type eq 'INFO' ) {
-            print {$fh} "$time [$type] ($PID) $message";
+            print {$fh} "$time [$type] ($PID) $message\n";
         }
         else {
             print {$fh} "$time [$type] ($PID) $message at $trace\n";
