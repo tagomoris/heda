@@ -84,7 +84,7 @@ sub authenticate { # authenticate( fieldname => $value, password => $password_va
         return undef;
     }
     my $passhash = Digest::SHA::sha256_hex($user->{salt} . $args{password});
-    return $user->{passhash} eq $passhash;
+    return $user->{passhash} eq $passhash and $user->{valid};
 }
 
 sub get {
