@@ -158,6 +158,10 @@ get '/overwrite' => [qw/require_supervisor_login/] => sub {
 post '/overwrite' => [qw/require_supervisor_login/] => sub {
 };
 
+post '/initalize' => [qw/require_supervisor_login/] => sub {
+    # password initialization
+};
+
 post '/remove' => [qw/require_supervisor_login/] => sub {
 };
 
