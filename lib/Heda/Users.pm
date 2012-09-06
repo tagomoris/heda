@@ -33,6 +33,10 @@ sub dbh {
     } );
 }
 
+sub salt {
+    Digest::SHA::sha1_hex(scalar(localtime) . rand());
+}
+
 # our @FULL_COLUMNS = qw(id subid username passhash fullname mailaddress salt valid superuser accounts memo created_at modified_at);
 our $COLUMNS_VIEW = 'id,subid,username,fullname,mailaddress,valid,superuser';
 our $COLUMNS_FULL = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo';
@@ -68,7 +72,7 @@ EOQ
     $self->dbh->select_row($sql, $value);
 }
 
-sub authenticate { # authenticate( fieldname => $value, password => $password_value )
+sub authenticate { # authenticate( fieldname => $value, password => $password_value, bypass_validation => $bool )
     my ($self, %args) = @_;
     my %param;
     if (defined $args{username}) { %param = ( username => $args{username}, auth => 1); }
@@ -84,7 +88,7 @@ sub authenticate { # authenticate( fieldname => $value, password => $password_va
         return undef;
     }
     my $passhash = Digest::SHA::sha256_hex($user->{salt} . $args{password});
-    return $user->{passhash} eq $passhash and $user->{valid};
+    return $user->{passhash} eq $passhash and ($args{bypass_validation} or $user->{valid});
 }
 
 sub get {
@@ -94,7 +98,7 @@ sub get {
 
 sub create {
     my ($self, $username, $password, $fullname, $mailaddress, $subid) = @_;
-    my $salt = Digest::SHA::sha1_hex(scalar(localtime) . rand());
+    my $salt = $self->salt;
     my $passhash = Digest::SHA::sha256_hex($salt . $password);
     my $sql = <<EOQ;
 INSERT INTO users (subid,username,passhash,fullname,mailaddress,salt) VALUES (?,?,?,?,?,?)

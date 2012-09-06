@@ -16,3 +16,11 @@ CREATE TABLE IF NOT EXISTS heda.users (
   modified_at TIMESTAMP    NOT NULL DEFAULT '0000-00-00 00:00:00',
   KEY users_authenticate (passhash,username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE DATABASE IF NOT EXISTS hedasession DEFAULT CHARACTER SET 'utf8';
+
+CREATE TABLE IF NOT EXISTS hedasession.session (
+  sid          VARCHAR(32) UNIQUE PRIMARY KEY,
+  data         TEXT,
+  expires      INTEGER UNSIGNED NOT NULL
+) ENGINE=InnoDB;

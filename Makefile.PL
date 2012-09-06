@@ -6,7 +6,9 @@ WriteMakefile(
     PREREQ_PM     => {
         'Plack::Builder::Conditionals' => 0,
         'Plack::Middleware::Scope::Container' => 0,
-        'Plack::Handler::Starlet' => 0,
+        'HTTP::Session::Store::DBI' => 0,
+        'HTTP::Session::State::Cookie' => 0,
+        'Starman' => 0,
         'Kossy' => 0,
         'URI' => 0,
         'Log::Minimal' => 0,
