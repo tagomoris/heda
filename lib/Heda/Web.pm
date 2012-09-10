@@ -14,6 +14,8 @@ use HTTP::Session;
 use HTTP::Session::Store::DBI;
 use HTTP::Session::State::Cookie;
 
+use JSON::XS;
+
 sub config {
     my $self = shift;
     $self->{config} //= Heda::Config->new($self->root_dir);
@@ -88,24 +90,39 @@ filter 'require_supervisor_login' => sub {
 
 get '/' => [qw/check_supervisor_login/] => sub {
     my ( $self, $c )  = @_;
-    my $errors;
-    if ($errors = $c->stash->{session}->get('errors')) {
-        $session->remove('errors');
+    my ($autherrors);
+    my ($inputvalues, $errors);
+    if ($c->req->referer) {
+        if ($autherrors = $c->stash->{session}->get('autherrors')) {
+            $c->stash->{session}->remove('autherrors');
+        }
+        if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
+            $c->stash->{session}->remove('inputvalues');
+        }
+        if ($errors = $c->stash->{session}->get('errors')) {
+            $c->stash->{session}->remove('errors');
+        }
     }
-    #TODO set input values
+    else {
+        $c->stash->{session}->remove('autherrors');
+        $c->stash->{session}->remove('inputvalues');
+        $c->stash->{session}->remove('errors');
+    }
+    $autherrors ||= +{ password => { flag => 0, message => '' } };
+    $inputvalues ||= +{};
     $errors ||= +{
         password => { flag => 0, message => '' },
         mismatch => { flag => 0, message => '' },
     };
-    $c->render('index.tx', { errors => $errors });
+    $c->render('index.tx', { autherrors => $autherrors, inputvalues => $inputvalues, errors => $errors });
 };
 
 post '/update' => [qw/check_supervisor_login/] => sub { # update accounts password by itself
     my ( $self, $c ) = @_;
-    my ($username,$password,$new1,$new2) = map { $c->req->param($_); } qw/username password new_password1 new_password2/;
-    my $r = $self->users->authenticate( username => $username, password => $password, bypass_validation => 1 );
+    my ($username,$password,$new1,$new2) = map { $c->req->param($_); } qw/username current_password new_password1 new_password2/;
+    my $user = $self->users->authenticate( username => $username, password => $password, bypass_validation => 1 );
     my $errors = {};
-    unless ($r) {
+    unless ($user) {
         $errors->{password} = +{ flag => 1, message => 'Incorrect password' };
     }
     if ($username eq $new1) {
@@ -119,17 +136,40 @@ post '/update' => [qw/check_supervisor_login/] => sub { # update accounts passwo
     }
 
     if ($errors->{password} or $errors->{mismatch}) {
-        $c->stash->session->set('errors', $errors);
-        #TODO store username input value into session
+        $c->stash->{session}->set('inputvalues', { username => $username });
+        $c->stash->{session}->set('errors', $errors);
         return $c->redirect('/');
     }
 
-    my $user = $self->users->search(username => $username);
-    $self->update($user->{id}, $username, $user->{salt}, $password, $new1);
-    #TODO store username input value into session
-    #TODO store success flag into session
+    $self->users->update($user->{id}, $username, $user->{salt}, $password, $new1);
+    $c->stash->{session}->set('inputvalues', { username => $username });
+    $c->stash->{session}->set('notice', { update_success => 'Password successfully updated' });
 
-    $self->redirect('/');
+    $user = $self->users->get($user->{id});
+    my $accounts = decode_json($user->{accounts});
+    $user->{account_list} = [
+        (map { +{ key => $_, val => $accounts->{$_} } } keys(%$accounts))
+    ];
+
+    $c->render('userinfo.tx', { subject => 'Password successfully updated', user => $user });
+};
+
+post '/authenticate' => [qw/check_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+    my ($username,$password) = map { $c->req->param($_); } qw/username password/;
+    my $user = $self->users->authenticate( username => $username, password => $password );
+    my $errors = {};
+    unless ($user) {
+        $errors->{password} = +{ flag => 1, message => 'Incorrect password' };
+        $c->stash->{session}->set('autherrors', $errors);
+        return $c->redirect('/');
+    }
+    my $accounts = decode_json($user->{accounts});
+    $user->{account_list} = [
+        (map { +{ key => $_, val => $accounts->{$_} } } keys(%$accounts))
+    ];
+
+    $c->render('userinfo.tx', { subject => 'Test success', user => $user });
 };
 
 get '/login' => [qw/check_supervisor_login/] => sub {

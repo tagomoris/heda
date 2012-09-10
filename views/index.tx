@@ -5,30 +5,53 @@
 
 : around content -> {
 
-<h2>Update password</h2>
+<h2>Test your account</h2>
 
-<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/update') :>">
+<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/authenticate') :>">
   <div class="control-group">
     <label class="control-label" for="inputUsername">Username</label>
     <div class="controls">
       <input type="text" id="inputUsername" placeholder="username" name="username" value="">
     </div>
   </div>
-  <div class="control-group<: $errors.password.flag ? ' error' : '' :>">
+  <div class="control-group<: $autherrors.password.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputPassword">Password</label>
+    <div class="controls">
+      <input type="password" id="inputPassword" placeholder="Password" name="password">
+      <p class="validator_message help-inline"><: $autherrors.password.message :></p>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn">Test</button>
+    </div>
+  </div>
+</form>
+
+<h2>Update password</h2>
+
+<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/update') :>">
+  <div class="control-group">
+    <label class="control-label" for="inputUsername">Username</label>
+    <div class="controls">
+      <input type="text" id="inputUsername" placeholder="username" name="username" value="<: $inputvalues.username :>">
+    </div>
+  </div>
+  <div class="control-group<: $errors.password.flag ? ' alert-message error' : '' :>">
     <label class="control-label" for="inputPassword">Password</label>
     <div class="controls">
       <input type="password" id="inputPassword" placeholder="Password" name="current_password">
-      <p class="validator_message help-block"><: $errors.password.message :></p>
+      <p class="validator_message help-inline"><: $errors.password.message :></p>
     </div>
   </div>
-  <div class="control-group<: $errors.mismatch.flag ? ' error' : '' :>">
+  <div class="control-group<: $errors.mismatch.flag ? ' alert-message error' : '' :>">
     <label class="control-label" for="input1st">New Password(1st)</label>
     <div class="controls">
       <input type="password" id="input1st" placeholder="New Password" name="new_password1">
-      <p class="validator_message help-block"><: $errors.mismatch.message :></p>
+      <p class="validator_message help-inline"><: $errors.mismatch.message :></p>
     </div>
   </div>
-  <div class="control-group<: $errors.mismatch.flag ? ' error' : '' :>">
+  <div class="control-group<: $errors.mismatch.flag ? ' alert-message error' : '' :>">
     <label class="control-label" for="input2nd">New Password(2nd)</label>
     <div class="controls">
       <input type="password" id="input2nd" placeholder="Once more" name="new_password2">
@@ -41,10 +64,4 @@
   </div>
 </form>
 
-
-<h2>Manage accounts</h2>
-Go to <a href="<: $c.req.uri_for('/login') :>">/login</a>
-
 : }
-
-

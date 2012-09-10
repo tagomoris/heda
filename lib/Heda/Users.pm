@@ -16,7 +16,7 @@ sub new {
     # dsn, db_username, db_password
     critf "'dsn' missing in database configuration" unless $conf->{dsn};
     critf "'username' missing in database configuration" unless $conf->{username};
-    warnf "'password' missing in database configuration" unless $conf->{password};
+    infof "'password' missing in database configuration" unless $conf->{password};
 
     infof("Heda::Data initialized: %s", +{dsn => $conf->{dsn}, username => $conf->{username}});
     return bless +{dsn => $conf->{dsn}, username => $conf->{username}, password => $conf->{password}}, $klass;
@@ -38,9 +38,8 @@ sub salt {
 }
 
 # our @FULL_COLUMNS = qw(id subid username passhash fullname mailaddress salt valid superuser accounts memo created_at modified_at);
-our $COLUMNS_VIEW = 'id,subid,username,fullname,mailaddress,valid,superuser';
-our $COLUMNS_FULL = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo';
-our $COLUMNS_AUTH = 'id,subid,username,fullname,mailaddress,valid,superuser,salt,passhash';
+our $COLUMNS_VIEW = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo,salt,modified_at';
+our $COLUMNS_AUTH = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo,salt,passhash,modified_at';
 
 sub all {
     my ($self) = @_;
@@ -63,8 +62,7 @@ sub search {
         croakf 'Heda::Users search key missing id/subid/username';
     }
     my $columns = $COLUMNS_VIEW;
-    if ($args{auth}) {    $columns = $COLUMNS_AUTH; }
-    elsif ($args{full}) { $columns = $COLUMNS_FULL; }
+    $columns = $COLUMNS_AUTH if $args{auth};
 
     my $sql = <<"EOQ";
 SELECT $columns FROM users WHERE $col=?
@@ -88,7 +86,11 @@ sub authenticate { # authenticate( fieldname => $value, password => $password_va
         return undef;
     }
     my $passhash = Digest::SHA::sha256_hex($user->{salt} . $args{password});
-    return $user->{passhash} eq $passhash and ($args{bypass_validation} or $user->{valid});
+    if ($user->{passhash} eq $passhash and ($args{bypass_validation} or $user->{valid})) {
+        delete $user->{passhash};
+        return $user;
+    }
+    return undef;
 }
 
 sub get {
@@ -105,7 +107,7 @@ INSERT INTO users (subid,username,passhash,fullname,mailaddress,salt) VALUES (?,
 EOQ
     my $dbh = $self->dbh;
     $dbh->query($sql, $subid, $username, $passhash, $fullname, $mailaddress, $salt);
-    $self->dbh->last_insert_id;
+    $dbh->last_insert_id;
 }
 
 sub update { # update password by itself
