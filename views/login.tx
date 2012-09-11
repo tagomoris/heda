@@ -1,0 +1,32 @@
+: cascade base
+: around page_header -> {
+<h1>Heda: Management Console</h1>
+: }
+
+: around content -> {
+
+<h2>Supervisor Login</h2>
+
+<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/login') :>">
+  <div class="control-group:<: $autherrors.username.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputUsername">Username</label>
+    <div class="controls">
+      <input type="text" id="inputUsername" placeholder="username" name="username">
+      <p class="validator_message help-inline"><: $autherrors.username.message :></p>
+    </div>
+  </div>
+  <div class="control-group<: $autherrors.password.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputPassword">Password</label>
+    <div class="controls">
+      <input type="password" id="inputPassword" placeholder="Password" name="password">
+      <p class="validator_message help-inline"><: $autherrors.password.message :></p>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn">Login</button>
+    </div>
+  </div>
+</form>
+
+: }

@@ -1,0 +1,50 @@
+: cascade base
+: around page_header -> {
+<h1>Heda: Management Console</h1>
+: }
+
+: around content -> {
+
+<h2>Users</h2>
+
+<table class="table">
+  <tr>
+    <th></th>
+    <th>Username</th>
+    <th>Fullname</th>
+    <th>Mail Address</th>
+    <th>SubID</th>
+    <th>Accounts</th>
+    <th><!-- INVALID / Supervisor --></th>
+    <th>Last modified</th>
+  </tr>
+  : for $list -> $user {
+  <tr>
+    <td>
+      <a href="#"><span class="label">edit</span></a>
+    </td>
+    <td><: $user.username :></td>
+    <td><: $user.fullname :></td>
+    <td><: $user.mailaddress :></td>
+    <td><: $user.subid :></td>
+    <td>
+      : for $user.account_list -> $account {
+      <div><: $account[0] :>: <: $account[1] :></div>
+      : }
+    </td>
+    <td>
+      : if $user.superuser {
+      <div><span class="label success">Supervisor</span></div>
+      : }
+      : if not $user.valid {
+      <div><span class="label warning">Disabled</span></div>
+      : }
+    </td>
+    <td><: $user.modified_at :></td>
+  </tr>
+  : }
+</table>
+
+<h3>TODO: sort/order link and selected sort/order symbol generation</h3>
+
+: }

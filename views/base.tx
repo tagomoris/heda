@@ -45,11 +45,11 @@ section > .row {
       <ul class="nav">
         <li><a href="<: $c.req.uri_for('/') :>">Home</a></li>
         : if $c.stash.supervisor {
-        <li><a href="<: $c.req.uri_for('/') :>">Show Users</a></li>
-        <li><a href="<: $c.req.uri_for('/') :>">Add User</a></li>
-        <li><a href="<: $c.req.uri_for('/') :>">Logout</a></li>
+        <li><a href="<: $c.req.uri_for('/list') :>">Show Users</a></li>
+        <li><a href="<: $c.req.uri_for('/create') :>">Add User</a></li>
+        <li><a href="<: $c.req.uri_for('/logout') :>">Logout</a></li>
         : } else {
-        <li><a href="<: $c.req.uri_for('/') :>">Login</a></li>
+        <li><a href="<: $c.req.uri_for('/login') :>">Login</a></li>
         : }
       </ul>
     </div>
