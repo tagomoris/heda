@@ -20,10 +20,9 @@ sub new {
     if ( -f $path ) {
         $self = load_config( $path );
     }
-    $self->{database} ||= $default->{database};
-    $self->{password_patterns} ||= $default->{password_patterns};
-    $self->{sessiondb} ||= $default->{sessiondb};
-    $self->{loglevel} ||= $default->{loglevel};
+    foreach my $key (keys(%$default)) {
+        $self->{$key} ||= $default->{$key};
+    }
 
     bless $self, $this;
 
@@ -49,6 +48,7 @@ sub default_config {
             username => 'root',
             password => '',
         },
+        accounts => ['cvs', 'svn', 'git', 'login'],
         loglevel => 'INFO',
     };
 }

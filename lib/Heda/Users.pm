@@ -103,7 +103,7 @@ sub create {
     my $salt = $self->salt;
     my $passhash = Digest::SHA::sha256_hex($salt . $password);
     my $sql = <<EOQ;
-INSERT INTO users (subid,username,passhash,fullname,mailaddress,salt) VALUES (?,?,?,?,?,?)
+INSERT INTO users (subid,username,passhash,fullname,mailaddress,salt,modified_at) VALUES (?,?,?,?,?,?,NOW())
 EOQ
     my $dbh = $self->dbh;
     $dbh->query($sql, $subid, $username, $passhash, $fullname, $mailaddress, $salt);

@@ -1,0 +1,70 @@
+: cascade base
+: around page_header -> {
+<h1>Heda: Management Console</h1>
+: }
+
+: around content -> {
+
+<h2>Create User</h2>
+
+<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/create') :>">
+  <div class="control-group<: $errors.username.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputUsername">Username</label>
+    <div class="controls">
+      <input type="text" id="inputUsername" placeholder="username" name="username" value="<: $inputvalues.username :>">
+      : if $errors.username.flag {
+      <p class="validator_message help-inline"><: $errors.username.message :></p>
+      : }
+    </div>
+  </div>
+  <div class="control-group<: $errors.fullname.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputFullname">Full Name</label>
+    <div class="controls">
+      <input type="text" id="inputFullname" placeholder="full name" name="fullname" value="<: $inputvalues.fullname :>">
+      : if $errors.fullname.flag {
+      <p class="validator_message help-inline"><: $errors.fullname.message :></p>
+      : }
+    </div>
+  </div>
+  <div class="control-group<: $errors.mailaddress.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputMailaddress">Mail Address</label>
+    <div class="controls">
+      <input type="text" id="inputMailaddress" class="span5" placeholder="localpart@domain" name="mailaddress" value="<: $inputvalues.mailaddress :>">
+      : if $errors.mailaddress.flag {
+      <p class="validator_message help-inline"><: $errors.mailaddress.message :></p>
+      : }
+    </div>
+  </div>
+  <div class="control-group<: $errors.subid.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputSubid">Sub ID</label>
+    <div class="controls">
+      <input type="text" id="inputSubid" class="span3" placeholder="..." name="subid" value="<: $inputvalues.subid :>">
+      : if $errors.subid.flag {
+      <p class="validator_message help-inline"><: $errors.subid.message :></p>
+      : }
+    </div>
+  </div>
+  <div class="control-group<: $errors.accounts.flag ? ' alert-message error' : '' :>">
+    <label class="control-label" for="inputAccounts">Accounts</label>
+    <div class="controls">
+      <textarea id="inputAccounts" class="span6" name="accounts" rows=4><: $inputvalues.accounts :></textarea>
+      : if $errors.accounts.flag {
+      <p class="validator_message help-inline"><: $errors.accounts.message :></p>
+      : }
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputSupervisor">Supervisor</label>
+    <div class="controls">
+      <input type="checkbox" id="inputSupervisor" name="superuser"<: $inputvalues.superuser ? ' checked' : '' :>>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn primary">Create</button>
+      <a class="btn" href="<: $c.req.uri_for('/list') :>">Cancel</a>
+    </div>
+  </div>
+</form>
+
+: }

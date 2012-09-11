@@ -4,6 +4,10 @@ use 5.014;
 use utf8;
 use Log::Minimal;
 
+use Try::Tiny;
+use List::Util;
+
+use Heda::Util;
 use Heda::Config;
 use Heda::Users;
 
@@ -243,9 +247,131 @@ get '/list' => [qw/require_supervisor_login/] => sub {
 };
 
 get '/create' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my $inputvalues;
+    my $errors;
+    if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
+        warnf "got inputvalues: %s", $inputvalues;
+        $c->stash->{session}->remove('inputvalues');
+    }
+    if ($errors = $c->stash->{session}->get('createerrors')) {
+        warnf "got errors: %s", $errors;
+        $c->stash->{session}->remove('createerrors');
+    }
+    $inputvalues ||= +{};
+    $errors ||= +{
+        username => { flag => 0, message => '' },
+        fullname => { flag => 0, message => '' },
+        mailaddress => { flag => 0, message => '' },
+        subid => { flag => 0, message => '' },
+        accounts => { flag => 0, message => '' },
+    };
+
+    $inputvalues->{accounts} ||= join(": \n", @{$self->config->{accounts}}) . ": ";
+
+    $c->render('create.tx', { inputvalues => $inputvalues, errors => $errors });
 };
 
-post '/post' => [qw/require_supervisor_login/] => sub {
+sub parse_accounts {
+    my ($self, $accounts) = @_;
+    return {} if length($accounts) < 1;
+    my @lines = split(/\n/, $accounts);
+    chomp @lines;
+    my $r = +{};
+    foreach my $line (@lines) {
+        my ($key, $val) = split(/: */, $line, 2);
+        return undef unless $key =~ m!^[-_.a-zA-Z0-9]+$!;
+        return undef unless defined $val;
+        $val =~ s/^ +//;
+        $val =~ s/ +$//;
+        $r->{$key} = $val if length($key) > 0 and length($val) > 0;
+    }
+    return $r;
+}
+
+post '/create' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+    my $result = $c->req->validator([
+        'username' => {'rule' => [
+            [sub{$_[1] =~ m!^[-_.a-zA-Z0-9]{1,32}$!}, 'Username format invalid'],
+        ]},
+        'fullname' => {'rule' => [
+            ['NOT_NULL', 'Fullname is missing'],
+            [sub{ length($_[1]) <= 32 }, 'Fullname is too long, max length: 32'],
+        ]},
+        'mailaddress' => {'rule' => [
+            # simple (strictly, partly wrong) mailaddress regexp...
+            [sub{$_[1] =~ m!^[-_.a-zA-Z0-9]+\@[-a-z0-9]+\.[-.a-z0-9]+$!}, 'Mailaddress format invalid'],
+            [sub{ length($_[1]) <= 256 }, 'Mailaddress is too long, max length: 256'],
+        ]},
+        'subid' => {'rule' => [
+            ['NOT_NULL', 'Subid is missing'],
+            [sub{$_[1] =~ m!^.{1,32}$!}, 'Subid is too long, max length: 32'],
+        ]},
+        'accounts' => {'rule' => [
+            [sub{ $self->parse_accounts($_[1]) }, 'Accounts lines MUST be "key: value" format'],
+        ]},
+    ]);
+    my $inputvalues = +{
+        (map { ( $_ => $c->req->param($_) ) } qw( username fullname mailaddress subid accounts superuser ))
+    };
+    if ($result->has_error) {
+        my $errors = +{};
+        my $raw_errors = $result->errors;
+        foreach my $field (keys(%$raw_errors)) {
+            $errors->{$field} = +{ flag => 1, message => $raw_errors->{$field} };
+        }
+        $c->stash->{session}->set('inputvalues', $inputvalues);
+        $c->stash->{session}->set('createerrors', $errors);
+        return $c->redirect('/create');
+    }
+
+    my $password = Heda::Util::gen_password();
+
+    my $username = $inputvalues->{username};
+    my $fullname = $inputvalues->{fullname};
+    my $mailaddress = $inputvalues->{mailaddress};
+    my $subid = $inputvalues->{subid};
+    my $superuser = $inputvalues->{superuser};
+    my $accounts = encode_json($self->parse_accounts($inputvalues->{accounts}));
+
+    my $exists_username = $self->users->search( username => $username );
+    my $exists_subid = $self->users->search( subid => $subid );
+    my $exists_mail = $self->users->search( mail => $mailaddress);
+
+    if ($exists_username or $exists_subid or $exists_mail) {
+        my $unique_errors = +{};
+        $unique_errors->{username} = +{ flag => 1, message => "Username '$username' already exists" } if $exists_username;
+        $unique_errors->{subid} = +{ flag => 1, message => "SubID '$subid' already exists" } if $exists_subid;
+        $unique_errors->{mailaddress} = +{ flag => 1, message => "Mail Address '$mailaddress' already exists" } if $exists_mail;
+
+        $c->stash->{session}->set('inputvalues', $inputvalues);
+        $c->stash->{session}->set('createerrors', $unique_errors);
+        return $c->redirect('/create');
+    }
+
+    my $id;
+    try {
+        my $uid = $self->users->create($username, $password, $fullname, $mailaddress, $subid);
+        $self->users->overwrite( $uid, $username, $fullname, $mailaddress, $subid, $superuser, $accounts, ''); # memo is blank
+        $id = $uid;
+    } catch {
+        warnf "Failed to insert user '%s' record: %s", $username, $_;
+    };
+    unless ($id) {
+        $c->stash->{session}->set('inputvalues', $inputvalues);
+        $c->stash->{session}->set('createerrors', {username => { flag => 1, message => 'Failed to create data...'}});
+        return $c->redirect('/create');
+    }
+    my $user = $self->users->get($id);
+    $user->{password} = $password;
+    my $accounts_obj = decode_json($user->{accounts});
+    $user->{account_list} = [
+        (map { +{ key => $_, val => $accounts_obj->{$_} } } keys(%$accounts_obj))
+    ];
+
+    $c->render('created.tx', { user => $user });
 };
 
 get '/overwrite' => [qw/require_supervisor_login/] => sub {

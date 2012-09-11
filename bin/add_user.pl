@@ -13,6 +13,7 @@ use List::Util qw//;
 use Log::Minimal;
 use Try::Tiny;
 
+use Heda::Util;
 use Heda::Config;
 use Heda::Users;
 
@@ -31,26 +32,6 @@ $config->{loglevel} = 'WARN';
 $config->configure_logger();
 
 my $users = Heda::Users->new( $config->{database} );
-
-sub get_char { my ($chars) = @_; substr($chars, int(rand(length($chars))), 1); }
-sub get_alphabet {
-    # misleading small-L, small-o, large-I, large-O are omitted
-    get_char('abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ');
-}
-sub get_num {
-    # misleading Zero, One is omitted
-    get_char('23456789');
-}
-sub get_symbol {
-    get_char('-_.,/=+^!~]');
-}
-sub gen_password {
-    my @chars = ();
-    push @chars, (get_alphabet(), get_alphabet(), get_alphabet(), get_alphabet(), get_alphabet());
-    push @chars, (get_num(), get_num());
-    push @chars, get_symbol();
-    return join('', List::Util::shuffle(@chars));
-}
 
 my @fields = qw( username fullname mailaddress subid );
 my @required = qw( username fullname mailaddress subid );
@@ -92,7 +73,7 @@ if ( $has_error ) {
 }
 
 foreach my $user (@user_list) {
-    my $password = gen_password();
+    my $password = Heda::Util::gen_password();
     my ($id, $error);
     try {
         $id = $users->create($user->{username}, $password, $user->{fullname}, $user->{mailaddress}, $user->{subid});
