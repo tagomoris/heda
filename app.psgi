@@ -11,7 +11,7 @@ my $app = Heda::Web->psgi($root_dir);
 builder {
     enable 'ReverseProxy';
     enable 'Static',
-        path => qr!^/(?:(?:css|js|images)/|favicon\.ico$)!,
+        path => qr!^/(?:(?:css|js|img|images)/|favicon\.ico$)!,
         root => $root_dir . '/public';
     $app;
 };
