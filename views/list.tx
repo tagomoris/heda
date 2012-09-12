@@ -1,6 +1,12 @@
 : cascade base
 : around page_header -> {
 <h1>Heda: Management Console</h1>
+: if $notification {
+<div class="alert<: $notification.type == 'success' ? ' alert-success' : '' :>">
+  <button type="button" class="close" data-dismiss="alert">×</button>
+  <strong><: $notification.subject :></strong> <: $notification.message :>
+</div>
+: } # notification
 : }
 
 : around content -> {
@@ -10,18 +16,50 @@
 <table class="table">
   <tr>
     <th></th>
-    <th style="cursor: auto; background-color: #8888ff;"><a href="<: $c.req.uri_for('/list?s=u&o=a') :>">Username</a></th>
+    <th class="sort<: $sort == 'u' ? ' selected' : '' :>">
+      : if $sort != "u" {
+      <a href="<: $c.req.uri_for('/list') :>?s=u&o=a">Username</a>
+      : } elsif $order == 'a' {
+      <a href="<: $c.req.uri_for('/list') :>?s=u&o=d">Username<i class="icon-chevron-down"></i></a>
+      : } else {
+      <a href="<: $c.req.uri_for('/list') :>?s=u&o=a">Username<i class="icon-chevron-up"></i></a>
+      : }
+    </th>
     <th>Fullname</th>
-    <th>Mail Address</th>
-    <th>SubID</th>
+    <th class="sort<: $sort == 'e' ? ' selected' : '' :>">
+      : if $sort != "e" {
+      <a href="<: $c.req.uri_for('/list') :>?s=e&o=a">Mail Address</a>
+      : } elsif $order == 'a' {
+      <a href="<: $c.req.uri_for('/list') :>?s=e&o=d">Mail Address<i class="icon-chevron-down"></i></a>
+      : } else {
+      <a href="<: $c.req.uri_for('/list') :>?s=e&o=a">Mail Address<i class="icon-chevron-up"></i></a>
+      : }
+    </th>
+    <th class="sort<: $sort == 's' ? ' selected' : '' :>">
+      : if $sort != "s" {
+      <a href="<: $c.req.uri_for('/list') :>?s=s&o=a">SubID</a>
+      : } elsif $order == 'a' {
+      <a href="<: $c.req.uri_for('/list') :>?s=s&o=d">SubID<i class="icon-chevron-down"></i></a>
+      : } else {
+      <a href="<: $c.req.uri_for('/list') :>?s=s&o=a">SubID<i class="icon-chevron-up"></i></a>
+      : }
+    </th>
     <th>Accounts</th>
     <th><!-- INVALID / Supervisor --></th>
-    <th>Last modified</th>
+    <th class="sort<: $sort == 'm' ? ' selected' : '' :>">
+      : if $sort != "m" {
+      <a href="<: $c.req.uri_for('/list') :>?s=m&o=a">Last modified</a>
+      : } elsif $order == 'a' {
+      <a href="<: $c.req.uri_for('/list') :>?s=m&o=d">Last modified<i class="icon-chevron-down"></i></a>
+      : } else {
+      <a href="<: $c.req.uri_for('/list') :>?s=m&o=a">Last modified<i class="icon-chevron-up"></i></a>
+      : }
+    </th>
   </tr>
   : for $list -> $user {
   <tr>
     <td>
-      <a href="#"><span class="label">edit</span></a>
+      <a href="<: $c.req.uri_for('/edit/'~$user.username) :>"><span class="label">edit</span></a>
     </td>
     <td><: $user.username :></td>
     <td><: $user.fullname :></td>

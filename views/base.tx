@@ -18,7 +18,7 @@ body {
 section {
 }
 section > .row {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 .control-group {
   padding-bottom: 5px;
@@ -26,6 +26,16 @@ section > .row {
 .control-label {
   font-size: middle;
   padding-right: 20px;
+}
+th.sort {
+  background-color: #ddddff;
+  cursor: auto;
+}
+th.sort > a {
+  color: #000000;
+}
+th.selected {
+  background-color: #bbbbff;
 }
 .footer {
   background-color: #eee;

@@ -35,6 +35,23 @@ sub password_validate {
     $result;
 }
 
+sub parse_accounts {
+    my ($self, $accounts) = @_;
+    return {} if length($accounts) < 1;
+    my @lines = split(/ *\r?\n/, $accounts);
+    chomp @lines;
+    my $r = +{};
+    foreach my $line (@lines) {
+        my ($key, $val) = split(/: */, $line, 2);
+        return undef unless $key =~ m!^[-_.a-zA-Z0-9]+$!;
+        return undef unless defined $val;
+        $val =~ s/^ +//;
+        $val =~ s/ +$//;
+        $r->{$key} = $val if length($key) > 0 and length($val) > 0;
+    }
+    return $r;
+}
+
 sub users {
     my $self = shift;
     $self->{users} //= Heda::Users->new($self->config->{database});
@@ -244,7 +261,12 @@ get '/list' => [qw/require_supervisor_login/] => sub {
         $user->{account_list} = [map { [$_, $account->{$_}] } sort(keys %$account)];
     }
 
-    $c->render('list.tx', { list => $list, sort => $sort, order => $order });
+    my $notification;
+    if ($notification = $c->stash->{session}->get('notification')) {
+        $c->stash->{session}->remove('notification');
+    }
+
+    $c->render('list.tx', { list => $list, notification => $notification, sort => $sort, order => $order });
 };
 
 get '/create' => [qw/require_supervisor_login/] => sub {
@@ -253,11 +275,9 @@ get '/create' => [qw/require_supervisor_login/] => sub {
     my $inputvalues;
     my $errors;
     if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
-        warnf "got inputvalues: %s", $inputvalues;
         $c->stash->{session}->remove('inputvalues');
     }
     if ($errors = $c->stash->{session}->get('createerrors')) {
-        warnf "got errors: %s", $errors;
         $c->stash->{session}->remove('createerrors');
     }
     $inputvalues ||= +{};
@@ -273,23 +293,6 @@ get '/create' => [qw/require_supervisor_login/] => sub {
 
     $c->render('create.tx', { inputvalues => $inputvalues, errors => $errors });
 };
-
-sub parse_accounts {
-    my ($self, $accounts) = @_;
-    return {} if length($accounts) < 1;
-    my @lines = split(/ *\r?\n/, $accounts);
-    chomp @lines;
-    my $r = +{};
-    foreach my $line (@lines) {
-        my ($key, $val) = split(/: */, $line, 2);
-        return undef unless $key =~ m!^[-_.a-zA-Z0-9]+$!;
-        return undef unless defined $val;
-        $val =~ s/^ +//;
-        $val =~ s/ +$//;
-        $r->{$key} = $val if length($key) > 0 and length($val) > 0;
-    }
-    return $r;
-}
 
 post '/create' => [qw/require_supervisor_login/] => sub {
     my ( $self, $c ) = @_;
@@ -375,10 +378,113 @@ post '/create' => [qw/require_supervisor_login/] => sub {
     $c->render('created.tx', { user => $user });
 };
 
-get '/overwrite' => [qw/require_supervisor_login/] => sub {
+get '/edit/:username' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my $user = $self->users->search( username => $c->args->{username} );
+    unless ($user) {
+        return $c->halt(404, 'specified username not found.');
+    }
+
+    my $inputvalues;
+    my $errors;
+    if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
+        $c->stash->{session}->remove('inputvalues');
+    }
+    if ($errors = $c->stash->{session}->get('createerrors')) {
+        $c->stash->{session}->remove('createerrors');
+    }
+    $inputvalues->{fullname} ||= $user->{fullname};
+    $inputvalues->{mailaddress} ||= $user->{mailaddress};
+    $inputvalues->{subid} ||= $user->{subid};
+    $inputvalues->{superuser} ||= $user->{superuser};
+    $inputvalues->{memo} ||= $user->{memo};
+
+    unless ($inputvalues->{accounts}) {
+        my $accounts_obj = decode_json($user->{accounts});
+        if (scalar(keys %$accounts_obj) > 0) {
+            $inputvalues->{accounts} = join("\n", (map { join(": ", $_, $accounts_obj->{$_}) } keys(%$accounts_obj)));
+        } else {
+            $inputvalues->{accounts} ||= join(": \n", @{$self->config->{accounts}}) . ": ";
+        }
+    }
+    $errors ||= +{
+        username => { flag => 0, message => '' },
+        fullname => { flag => 0, message => '' },
+        mailaddress => { flag => 0, message => '' },
+        subid => { flag => 0, message => '' },
+        accounts => { flag => 0, message => '' },
+        memo => { flag => 0, message => '' },
+    };
+
+    $c->render('overwrite.tx', { user => $user, inputvalues => $inputvalues, errors => $errors });
 };
 
-post '/overwrite' => [qw/require_supervisor_login/] => sub {
+post '/edit/:username' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my $user = $self->users->search( username => $c->args->{username} );
+    unless ($user) {
+        return $c->halt(404, 'specified username not found.');
+    }
+
+    my $result = $c->req->validator([
+        'fullname' => {'rule' => [
+            ['NOT_NULL', 'Fullname is missing'],
+            [sub{ length($_[1]) <= 32 }, 'Fullname is too long, max length: 32'],
+        ]},
+        'mailaddress' => {'rule' => [
+            # simple (strictly, partly wrong) mailaddress regexp...
+            [sub{$_[1] =~ m!^[-_.a-zA-Z0-9]+\@[-a-z0-9]+\.[-.a-z0-9]+$!}, 'Mailaddress format invalid'],
+            [sub{ length($_[1]) <= 256 }, 'Mailaddress is too long, max length: 256'],
+        ]},
+        'subid' => {'rule' => [
+            ['NOT_NULL', 'Subid is missing'],
+            [sub{$_[1] =~ m!^.{1,32}$!}, 'Subid is too long, max length: 32'],
+        ]},
+        'accounts' => {'rule' => [
+            [sub{ $self->parse_accounts($_[1]) }, 'Accounts lines MUST be "key: value" format'],
+        ]},
+    ]);
+    my $inputvalues = +{
+        (map { ( $_ => $c->req->param($_) ) } qw( username fullname mailaddress subid accounts superuser memo ))
+    };
+    if ($result->has_error) {
+        my $errors = +{};
+        my $raw_errors = $result->errors;
+        foreach my $field (keys(%$raw_errors)) {
+            $errors->{$field} = +{ flag => 1, message => $raw_errors->{$field} };
+        }
+        $c->stash->{session}->set('inputvalues', $inputvalues);
+        $c->stash->{session}->set('createerrors', $errors);
+        return $c->redirect('/overwrite/' . $user->{username});
+    }
+
+    my $fullname = $inputvalues->{fullname};
+    my $mailaddress = $inputvalues->{mailaddress};
+    my $subid = $inputvalues->{subid};
+    my $superuser = $inputvalues->{superuser};
+    my $accounts = encode_json($self->parse_accounts($inputvalues->{accounts}));
+    my $memo = $inputvalues->{memo};
+
+    my $success = 0;
+    try {
+        $self->users->overwrite( $user->{id}, $user->{username}, $fullname, $mailaddress, $subid, $superuser, $accounts, $memo);
+        $success = 1;
+    } catch {
+        warnf "Failed to overwrite user '%s' record: %s", $user->{username}, $_;
+    };
+    unless ($success) {
+        $c->stash->{session}->set('inputvalues', $inputvalues);
+        $c->stash->{session}->set('createerrors', {username => { flag => 1, message => 'Failed to update data...'}});
+        return $c->redirect('/overwrite/' . $user->{username});
+    }
+    my $notification = +{
+        type => 'success',
+        subject => 'Success!',
+        message => 'to update ' . $user->{username},
+    };
+    $c->stash->{session}->set('notification', $notification);
 };
 
 post '/initalize' => [qw/require_supervisor_login/] => sub {
