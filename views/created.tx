@@ -27,11 +27,14 @@
   <tr>
     <td><strong>Accounts</strong></td>
     <td>
+      : if $user.account_list.size() > 0 {
       <table class="table-striped">
+        <tr><th>service</th><th>account name</th></tr>
         : for $user.account_list -> $a {
         <tr><td><: $a.key :></td><td><: $a.val :></td>
         : }
       </table>
+      : }
     </td>
   </tr>
   : if $user.password {
@@ -42,7 +45,7 @@
   : }
   <tr>
     <td><strong>Supervisor</strong></td>
-    <td><: $user.supervisor ? 'yes' : 'no' :></td>
+    <td><: $user.superuser ? 'yes' : 'no' :></td>
   </tr>
   <tr>
     <td><strong>Last modified</strong></td>

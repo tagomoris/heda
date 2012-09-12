@@ -48,6 +48,7 @@ sub session {
     HTTP::Session->new(
         store => HTTP::Session::Store::DBI->new({
             dbh => DBI->connect_cached( $sessiondb->{dsn}, $sessiondb->{username}, $sessiondb->{password} ),
+            # expires => ($sessiondb->{expires} || 1800),
             expires => ($sessiondb->{expires} || 1800),
         }),
         state => HTTP::Session::State::Cookie->new(cookie_key => 'hedaweb'),
@@ -276,7 +277,7 @@ get '/create' => [qw/require_supervisor_login/] => sub {
 sub parse_accounts {
     my ($self, $accounts) = @_;
     return {} if length($accounts) < 1;
-    my @lines = split(/\n/, $accounts);
+    my @lines = split(/ *\r?\n/, $accounts);
     chomp @lines;
     my $r = +{};
     foreach my $line (@lines) {

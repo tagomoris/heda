@@ -47,6 +47,7 @@ sub default_config {
             dsn => "DBI:mysql:database=hedasession;host=localhost",
             username => 'root',
             password => '',
+            expires => 18000, #TODO 1800, for dev/test
         },
         accounts => ['cvs', 'svn', 'git', 'login'],
         loglevel => 'INFO',
