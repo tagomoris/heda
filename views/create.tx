@@ -61,7 +61,7 @@
   </div>
   <div class="control-group">
     <div class="controls">
-      <button type="submit" class="btn primary">Create</button>
+      <button type="submit" class="btn btn-primary">Create</button>
       <a class="btn" href="<: $c.req.uri_for('/list') :>">Cancel</a>
     </div>
   </div>

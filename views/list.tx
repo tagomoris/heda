@@ -10,7 +10,7 @@
 <table class="table">
   <tr>
     <th></th>
-    <th>Username</th>
+    <th style="cursor: auto; background-color: #8888ff;"><a href="<: $c.req.uri_for('/list?s=u&o=a') :>">Username</a></th>
     <th>Fullname</th>
     <th>Mail Address</th>
     <th>SubID</th>
@@ -34,10 +34,10 @@
     </td>
     <td>
       : if $user.superuser {
-      <div><span class="label success">Supervisor</span></div>
+      <div><span class="label label-success">Supervisor</span></div>
       : }
       : if not $user.valid {
-      <div><span class="label warning">Disabled</span></div>
+      <div><span class="label label-warning">Disabled</span></div>
       : }
     </td>
     <td><: $user.modified_at :></td>

@@ -6,13 +6,16 @@
 <link rel="stylesheet" href="<: $c.req.uri_for('/css/bootstrap.min.css') :>">
 <title>Heda</title>
 <style type='text/css'>
+
+
 body {
+  margin: 0;
+  font-size: medium;
+  line-height: 15px;
   background-color: #fff;
   position: relative;
 }
 section {
-  padding-top: 60px;
-  font-size: large;
 }
 section > .row {
   margin-bottom: 10px;
@@ -38,9 +41,9 @@ section > .row {
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="container">
+<div class="navbar navbar-inverse">
+  <div class="container">
+    <div class="navbar-inner">
       <a class="brand" href="<: $c.req.uri_for('/') :>">Heda</a>
       <ul class="nav">
         <li><a href="<: $c.req.uri_for('/') :>">Home</a></li>
@@ -77,8 +80,7 @@ section > .row {
 </footer>
 
 <script type="text/javascript" src="<: $c.req.uri_for('/js/jquery-1.7.1.min.js') :>"></script>
-<script type="text/javascript" src="<: $c.req.uri_for('/js/bootstrap-modal.js') :>"></script>
-<script type="text/javascript" src="<: $c.req.uri_for('/js/bootstrap-alerts.js') :>"></script>
+<script type="text/javascript" src="<: $c.req.uri_for('/js/bootstrap.min.js') :>"></script>
 </body>
 </html>
 
