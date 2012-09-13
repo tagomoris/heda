@@ -129,6 +129,16 @@ EOQ
     $self->dbh->query($sql, $username, $fullname, $mailaddress, $subid, ($superuser ? 1 : 0), $accounts, $memo, $id);
 }
 
+sub reset_password {
+    my ($self, $id, $password) = @_;
+    my $salt = Digest::SHA::sha1_hex(scalar(localtime) . rand());
+    my $passhash = Digest::SHA::sha256_hex($salt . $password);
+    my $sql = <<EOQ;
+UPDATE users SET passhash=?,salt=?,valid=0,modified_at=NOW() WHERE id=?
+EOQ
+    $self->dbh->query($sql, $passhash, $salt, $id);
+}
+
 sub delete {
     my ($self, $id) = @_;
     my $sql = <<EOQ;

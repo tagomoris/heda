@@ -5,7 +5,7 @@
 
 : around content -> {
 
-<h2>User Successfully Created</h2>
+<h2><: $reset ? 'Reset User password' : 'User Successfully Created' :></h2>
 
 <div class="span8">
   <table class="table">
@@ -72,6 +72,10 @@ other accounts:
 : for $user.account_list -> $a {
   <: $a.key :> : <: $a.val :>
 : }
+
+To enable your account:
+<: $c.req.uri_for('/') :>?u=<: $user.username :>
+
 </pre>
 </div>
 

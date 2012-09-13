@@ -1,0 +1,39 @@
+: cascade base
+: around page_header -> {
+<h1>Heda: Management Console</h1>
+: }
+
+: around content -> {
+
+<h2>Confirm your operation: <: $op :> '<: $username :>'</h2>
+
+<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/'~$op) :>">
+  <div class="control-group">
+    <label class="control-label" for="inputUsername">Target Username</label>
+    <div class="controls">
+      <span class="input-xlarge uneditable-input"><: $username :></span>
+      <input type="hidden" id="inputUsername" name="username" value="<: $username :>">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputHidden">PIN Code</label>
+    <div class="controls">
+      <span class="input-xlarge uneditable-input" style="color: red; font-weight: bolder;"><: $pin :></span>
+      <input type="hidden" id="inputHidden" name="hidden" value="<: $hidden :>">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputPincode">Type PIN Code</label>
+    <div class="controls">
+      <input type="text" id="inputPincode" name="pin">
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn btn-danger">Confirm to <: $op :></button>
+      <a class="btn" href="<: $c.req.uri_for('/list') :>">Cancel</a>
+    </div>
+  </div>
+</form>
+
+: }

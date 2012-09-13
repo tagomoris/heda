@@ -113,15 +113,9 @@ get '/' => [qw/check_supervisor_login/] => sub {
     my ($autherrors);
     my ($inputvalues, $errors);
     if ($c->req->referer) {
-        if ($autherrors = $c->stash->{session}->get('autherrors')) {
-            $c->stash->{session}->remove('autherrors');
-        }
-        if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
-            $c->stash->{session}->remove('inputvalues');
-        }
-        if ($errors = $c->stash->{session}->get('errors')) {
-            $c->stash->{session}->remove('errors');
-        }
+        $autherrors = $c->stash->{session}->remove('autherrors');
+        $inputvalues = $c->stash->{session}->remove('inputvalues');
+        $errors = $c->stash->{session}->remove('errors');
     }
     else {
         $c->stash->{session}->remove('autherrors');
@@ -134,7 +128,13 @@ get '/' => [qw/check_supervisor_login/] => sub {
         password => { flag => 0, message => '' },
         mismatch => { flag => 0, message => '' },
     };
-    $c->render('index.tx', { autherrors => $autherrors, inputvalues => $inputvalues, errors => $errors });
+
+    my $username = $c->req->param('u');
+
+    $c->render('index.tx', {
+        username => $username,
+        autherrors => $autherrors, inputvalues => $inputvalues, errors => $errors
+    });
 };
 
 post '/update' => [qw/check_supervisor_login/] => sub { # update accounts password by itself
@@ -261,10 +261,7 @@ get '/list' => [qw/require_supervisor_login/] => sub {
         $user->{account_list} = [map { [$_, $account->{$_}] } sort(keys %$account)];
     }
 
-    my $notification;
-    if ($notification = $c->stash->{session}->get('notification')) {
-        $c->stash->{session}->remove('notification');
-    }
+    my $notification = $c->stash->{session}->remove('notification');
 
     $c->render('list.tx', { list => $list, notification => $notification, sort => $sort, order => $order });
 };
@@ -272,14 +269,9 @@ get '/list' => [qw/require_supervisor_login/] => sub {
 get '/create' => [qw/require_supervisor_login/] => sub {
     my ( $self, $c ) = @_;
 
-    my $inputvalues;
-    my $errors;
-    if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
-        $c->stash->{session}->remove('inputvalues');
-    }
-    if ($errors = $c->stash->{session}->get('createerrors')) {
-        $c->stash->{session}->remove('createerrors');
-    }
+    my $inputvalues = $c->stash->{session}->remove('inputvalues');
+    my $errors = $c->stash->{session}->remove('createerrors');
+
     $inputvalues ||= +{};
     $errors ||= +{
         username => { flag => 0, message => '' },
@@ -318,7 +310,7 @@ post '/create' => [qw/require_supervisor_login/] => sub {
         ]},
     ]);
     my $inputvalues = +{
-        (map { ( $_ => $c->req->param($_) ) } qw( username fullname mailaddress subid accounts superuser ))
+        (map { ( $_ => ($c->req->param($_) || "") ) } qw( username fullname mailaddress subid accounts superuser ))
     };
     if ($result->has_error) {
         my $errors = +{};
@@ -386,14 +378,9 @@ get '/edit/:username' => [qw/require_supervisor_login/] => sub {
         return $c->halt(404, 'specified username not found.');
     }
 
-    my $inputvalues;
-    my $errors;
-    if ($inputvalues = $c->stash->{session}->get('inputvalues')) {
-        $c->stash->{session}->remove('inputvalues');
-    }
-    if ($errors = $c->stash->{session}->get('createerrors')) {
-        $c->stash->{session}->remove('createerrors');
-    }
+    my $inputvalues = $c->stash->{session}->remove('inputvalues');
+    my $errors = $c->stash->{session}->remove('createerrors');
+
     $inputvalues->{fullname} ||= $user->{fullname};
     $inputvalues->{mailaddress} ||= $user->{mailaddress};
     $inputvalues->{subid} ||= $user->{subid};
@@ -446,8 +433,10 @@ post '/edit/:username' => [qw/require_supervisor_login/] => sub {
             [sub{ $self->parse_accounts($_[1]) }, 'Accounts lines MUST be "key: value" format'],
         ]},
     ]);
+    warnf "PARAM: %s", [map { ( "$_" => ($c->req->param("$_") || "") ) } qw( fullname mailaddress subid accounts superuser memo )];
+
     my $inputvalues = +{
-        (map { ( $_ => $c->req->param($_) ) } qw( username fullname mailaddress subid accounts superuser memo ))
+        (map { ( "$_" => ($c->req->param("$_") || "") ) } qw( fullname mailaddress subid accounts superuser memo ))
     };
     if ($result->has_error) {
         my $errors = +{};
@@ -460,6 +449,7 @@ post '/edit/:username' => [qw/require_supervisor_login/] => sub {
         return $c->redirect('/overwrite/' . $user->{username});
     }
 
+    warnf "inputvalues: %s", $inputvalues;
     my $fullname = $inputvalues->{fullname};
     my $mailaddress = $inputvalues->{mailaddress};
     my $subid = $inputvalues->{subid};
@@ -485,13 +475,76 @@ post '/edit/:username' => [qw/require_supervisor_login/] => sub {
         message => 'to update ' . $user->{username},
     };
     $c->stash->{session}->set('notification', $notification);
+    $c->redirect('/list');
 };
 
-post '/initalize' => [qw/require_supervisor_login/] => sub {
-    # password initialization
+get '/reset/:username' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my $user = $self->users->search( username => $c->args->{username} );
+    return $c->halt(404, 'specified username not found.') unless $user;
+
+    my ($pin, $hidden, $hash) = Heda::Util::gen_pincode();
+    $c->stash->{session}->set('danger_op_key', $hash);
+
+    $c->render('dialog.tx', { op => 'reset', username => $user->{username}, pin => $pin, hidden => $hidden });
+};
+
+post '/reset' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my ($pin, $hidden) = ($c->req->param('pin'), $c->req->param('hidden'));
+    my $user = $self->users->search( username => $c->req->param('username') );
+    return $c->halt(404, 'specified username not found.') unless $user;
+
+    my $hash = $c->stash->{session}->remove('danger_op_key');
+    unless ($hash and Heda::Util::check_pincode($pin, $hidden, $hash)) {
+        return $c->halt(400, 'not operated correctly.');
+    }
+    my $password = Heda::Util::gen_password();
+    $self->users->reset_password($user->{id}, $password);
+
+    $user->{password} = $password;
+    my $accounts_obj = decode_json($user->{accounts});
+    $user->{account_list} = [
+        (map { +{ key => $_, val => $accounts_obj->{$_} } } keys(%$accounts_obj))
+    ];
+
+    $c->render('created.tx', { reset => 1, user => $user });
+};
+
+get '/remove/:username' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my $user = $self->users->search( username => $c->args->{username} );
+    return $c->halt(404, 'specified username not found.') unless $user;
+
+    my ($pin, $hidden, $hash) = Heda::Util::gen_pincode();
+    $c->stash->{session}->set('danger_op_key', $hash);
+
+    $c->render('dialog.tx', { op => 'remove', username => $user->{username}, pin => $pin, hidden => $hidden });
 };
 
 post '/remove' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my ($pin, $hidden) = ($c->req->param('pin'), $c->req->param('hidden'));
+    my $user = $self->users->search( username => $c->req->param('username') );
+    return $c->halt(404, 'specified username not found.') unless $user;
+
+    my $hash = $c->stash->{session}->remove('danger_op_key');
+    unless ($hash and Heda::Util::check_pincode($pin, $hidden, $hash)) {
+        return $c->halt(400, 'not operated correctly.');
+    }
+    $self->users->delete($user->{id});
+
+    my $notification = +{
+        # type => 'success', # warning
+        subject => 'Success!',
+        message => 'to remove user ' . $user->{username},
+    };
+    $c->stash->{session}->set('notification', $notification);
+    $c->redirect('/list');
 };
 
 1;

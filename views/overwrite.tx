@@ -7,7 +7,7 @@
 
 <h2>Edit User</h2>
 
-<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/overwrite/'~$user.username) :>">
+<form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/edit/'~$user.username) :>">
   <div class="control-group">
     <label class="control-label">Username</label>
     <div class="controls">
@@ -66,13 +66,12 @@
     </div>
   </div>
   <div class="control-group">
-    <div class="controls">
+    <div class="controls form-actions">
       <button type="submit" class="btn btn-primary">Update</button>
       <a class="btn" href="<: $c.req.uri_for('/list') :>">Cancel</a>
-      <a class="btn btn-warning" href="#">Reset password</a>
-      <a class="btn btn-danger" href="#">Delete account</a>
+      <a class="btn btn-warning" href="<: $c.req.uri_for('/reset/'~$user.username) :>">Reset password</a>
+      <a class="btn btn-danger" href="<: $c.req.uri_for('/remove/'~$user.username) :>">Delete account</a>
     </div>
   </div>
 </form>
-
 : }

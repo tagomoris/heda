@@ -5,6 +5,8 @@
 
 : around content -> {
 
+: if not $username {
+
 <h2>Test your account</h2>
 
 <form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/authenticate') :>">
@@ -28,13 +30,15 @@
   </div>
 </form>
 
+: }
+
 <h2>Update password</h2>
 
 <form class="form-horizontal" method="POST" action="<: $c.req.uri_for('/update') :>">
   <div class="control-group">
     <label class="control-label" for="inputUsername">Username</label>
     <div class="controls">
-      <input type="text" id="inputUsername" placeholder="username" name="username" value="<: $inputvalues.username :>">
+      <input type="text" id="inputUsername" placeholder="username" name="username" value="<: $inputvalues.username || $username :>">
     </div>
   </div>
   <div class="control-group<: $errors.password.flag ? ' alert-message error' : '' :>">
