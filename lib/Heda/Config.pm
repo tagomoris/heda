@@ -49,7 +49,7 @@ sub default_config {
             password => '',
             expires => 18000, #TODO 1800, for dev/test
         },
-        accounts => ['cvs', 'svn', 'git', 'login'],
+        accounts => ['login', 'git'],
         loglevel => 'INFO',
     };
 }

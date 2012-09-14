@@ -1,0 +1,22 @@
+{
+    "database": {
+        "dsn":"DBI:mysql:database=heda;host=localhost",
+        "username":"root",
+        "password":""
+    },
+    "password_patterns": [
+        "^[-_ .,/?<>\\[\\]{}|=+()*&^%$#@!~a-zA-Z0-9]{8,}$",
+        "[a-zA-Z]",
+        "[0-9]",
+        "[-_ .,/?<>\\[\\]{}|=+()*&^%$#@!~]"
+    ],
+    "sessiondb": {
+        "dsn": "DBI:mysql:database=hedasession;host=localhost",
+        "username": "root",
+        "password": "",
+        "expires": 18000
+    },
+    "accounts": ["login","git"],
+    "loglevel": "INFO"
+}
+
