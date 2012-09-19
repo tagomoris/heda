@@ -17,6 +17,12 @@
         "expires": 18000
     },
     "accounts": ["login","git"],
+    "links": {
+        "username":"",
+        "fullname":"",
+        "mailaddress":"",
+        "subid":"http://your.local.system/?q=%s",
+    },
     "loglevel": "INFO"
 }
 

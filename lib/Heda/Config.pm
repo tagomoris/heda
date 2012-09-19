@@ -51,6 +51,12 @@ sub default_config {
             expires => 1800,
         },
         accounts => ['login', 'git'],
+        links => +{
+            # username => '',
+            # fullname => '',
+            # mailaddress => '',
+            # subid => '',
+        },
         loglevel => 'INFO',
     };
 }

@@ -26,6 +26,24 @@ sub config {
     return $self->{config};
 }
 
+sub links {
+    my $self = shift;
+    {
+        package Heda::Web::Links;
+        sub new {
+            my ($this, %mapping) = @_;
+            my $self = +{%mapping};
+            return bless $self, $this;
+        }
+        sub username { my ($self,$v) = @_; return $self->{username} =~ s/\%s/$v/gr; };
+        sub fullname { my ($self,$v) = @_; return $self->{fullname} =~ s/\%s/$v/gr; };
+        sub mailaddress { my ($self,$v) = @_; return $self->{mailaddress} =~ s/\%s/$v/gr; };
+        sub subid { my ($self,$v) = @_; return $self->{subid} =~ s/\%s/$v/gr; };
+    }
+    $self->{links} //= Heda::Web::Links->new(%{$self->config->{links}});
+    return $self->{links};
+}
+
 sub password_validate {
     my ($self, $password) = @_;
     my $result = 1;
@@ -263,7 +281,13 @@ get '/list' => [qw/require_supervisor_login/] => sub {
 
     my $notification = $c->stash->{session}->remove('notification');
 
-    $c->render('list.tx', { list => $list, notification => $notification, sort => $sort, order => $order });
+    $c->render('list.tx', +{
+        list => $list,
+        notification => $notification,
+        sort => $sort,
+        order => $order,
+        links => $self->links(),
+    });
 };
 
 get '/create' => [qw/require_supervisor_login/] => sub {

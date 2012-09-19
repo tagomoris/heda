@@ -61,10 +61,34 @@
     <td>
       <a href="<: $c.req.uri_for('/edit/'~$user.username) :>"><span class="label">edit</span></a>
     </td>
-    <td><: $user.username :></td>
-    <td><: $user.fullname :></td>
-    <td><: $user.mailaddress :></td>
-    <td><: $user.subid :></td>
+    <td>
+      : if $links.username($user.username).length() < 1 {
+      <: $user.username :>
+      : } else {
+      <a href="<: $links.username($user.username) :>" target="_blank"><: $user.username :></a>
+      : }
+    </td>
+    <td>
+      : if $links.fullname($user.fullname).length() < 1 {
+      <: $user.fullname :>
+      : } else {
+      <a href="<: $links.fullname($user.fullname) :>" target="_blank"><: $user.fullname :></a>
+      : }
+    </td>
+    <td>
+      : if $links.mailaddress($user.mailaddress).length() < 1 {
+      <: $user.mailaddress :>
+      : } else {
+      <a href="<: $links.mailaddress($user.mailaddress) :>" target="_blank"><: $user.mailaddress :></a>
+      : }
+    </td>
+    <td>
+      : if $links.subid($user.subid).length() < 1 {
+      <: $user.subid :>
+      : } else {
+      <a href="<: $links.subid($user.subid) :>" target="_blank"><: $user.subid :></a>
+      : }
+    </td>
     <td>
       : for $user.account_list -> $account {
       <div><: $account[0] :>: <: $account[1] :></div>
