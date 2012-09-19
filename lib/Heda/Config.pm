@@ -56,15 +56,18 @@ sub default_config {
 
 sub load_config {
     my $path = shift;
-    my $json_obj = try {
+    my $json_obj;
+    try {
         open( my $fh, '<', $path) or die $!;
         my $json_string = join('', <$fh>);
         close($fh);
-        decode_json($json_string);
+        $json_obj = decode_json($json_string);
     } catch {
-        warnf "configuration file %s load error: %s", $path, $_;
-        undef;
+        warnf "configuration file %s load error?: %s", $path, $_;
     };
+    unless (defined $json_obj) {
+        croakf "Failed to load configuration file %s", $path;
+    }
     return $json_obj;
 }
 
