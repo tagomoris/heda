@@ -63,7 +63,7 @@ sub load_config {
         close($fh);
         $json_obj = decode_json($json_string);
     } catch {
-        croakf "configuration load error: %s", $_;
+        croakf "configuration file %s load error: %s", $path, $_;
     };
     return $json_obj;
 }
