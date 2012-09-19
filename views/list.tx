@@ -65,28 +65,28 @@
       : if $links.username($user.username).length() < 1 {
       <: $user.username :>
       : } else {
-      <a href="<: $links.username($user.username) :>" target="_blank"><: $user.username :></a>
+      <a href="<: $links.username($user.username) | raw :>" target="_blank"><: $user.username :></a>
       : }
     </td>
     <td>
       : if $links.fullname($user.fullname).length() < 1 {
       <: $user.fullname :>
       : } else {
-      <a href="<: $links.fullname($user.fullname) :>" target="_blank"><: $user.fullname :></a>
+      <a href="<: $links.fullname($user.fullname) | raw :>" target="_blank"><: $user.fullname :></a>
       : }
     </td>
     <td>
       : if $links.mailaddress($user.mailaddress).length() < 1 {
       <: $user.mailaddress :>
       : } else {
-      <a href="<: $links.mailaddress($user.mailaddress) :>" target="_blank"><: $user.mailaddress :></a>
+      <a href="<: $links.mailaddress($user.mailaddress) | raw :>" target="_blank"><: $user.mailaddress :></a>
       : }
     </td>
     <td>
       : if $links.subid($user.subid).length() < 1 {
       <: $user.subid :>
       : } else {
-      <a href="<: $links.subid($user.subid) :>" target="_blank"><: $user.subid :></a>
+      <a href="<: $links.subid($user.subid) | raw :>" target="_blank"><: $user.subid :></a>
       : }
     </td>
     <td>
