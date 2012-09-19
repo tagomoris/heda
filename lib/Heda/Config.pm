@@ -6,6 +6,7 @@ use English;
 use Log::Minimal;
 
 use JSON::XS;
+use Try::Tiny;
 
 sub new {
     my ($this, $root_dir) = @_;
