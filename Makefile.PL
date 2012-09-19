@@ -4,6 +4,7 @@ WriteMakefile(
     NAME          => 'Heda',
     VERSION_FROM  => 'lib/Heda.pm',
     PREREQ_PM     => {
+        'Plack' => 0,
         'Plack::Builder::Conditionals' => 0,
         'Plack::Middleware::Scope::Container' => 0,
         'HTTP::Session::Store::DBI' => 0,
