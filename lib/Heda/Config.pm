@@ -47,7 +47,7 @@ sub default_config {
             dsn => "DBI:mysql:database=hedasession;host=localhost",
             username => 'root',
             password => '',
-            expires => 18000, #TODO 1800, for dev/test
+            expires => 1800,
         },
         accounts => ['login', 'git'],
         loglevel => 'INFO',
@@ -56,14 +56,14 @@ sub default_config {
 
 sub load_config {
     my $path = shift;
-    my $json_obj;
-    try {
+    my $json_obj = try {
         open( my $fh, '<', $path) or die $!;
         my $json_string = join('', <$fh>);
         close($fh);
-        $json_obj = decode_json($json_string);
+        decode_json($json_string);
     } catch {
-        croakf "configuration file %s load error: %s", $path, $_;
+        warnf "configuration file %s load error: %s", $path, $_;
+        undef;
     };
     return $json_obj;
 }
