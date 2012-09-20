@@ -35,10 +35,10 @@ sub links {
             my $self = +{%mapping};
             return bless $self, $this;
         }
-        sub username { my ($self,$v) = @_; return $self->{username} =~ s/\%s/$v/gr; };
-        sub fullname { my ($self,$v) = @_; return $self->{fullname} =~ s/\%s/$v/gr; };
-        sub mailaddress { my ($self,$v) = @_; return $self->{mailaddress} =~ s/\%s/$v/gr; };
-        sub subid { my ($self,$v) = @_; return $self->{subid} =~ s/\%s/$v/gr; };
+        sub username { my ($self,$v) = @_; return ($self->{username} || '') =~ s/\%s/$v/gr; };
+        sub fullname { my ($self,$v) = @_; return ($self->{fullname} || '') =~ s/\%s/$v/gr; };
+        sub mailaddress { my ($self,$v) = @_; return ($self->{mailaddress} || '') =~ s/\%s/$v/gr; };
+        sub subid { my ($self,$v) = @_; return ($self->{subid} || '') =~ s/\%s/$v/gr; };
     }
     $self->{links} //= Heda::Web::Links->new(%{$self->config->{links}});
     return $self->{links};
