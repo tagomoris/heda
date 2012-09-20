@@ -115,7 +115,7 @@ filter 'require_supervisor_login' => sub {
         my $session = $self->session($c->req);
 
         unless ($session->get('authenticated') and $session->get('supervisor')) {
-            return $c->halt(401, 'specified operations requires login, see /.');
+            return $c->redirect('/login');
         }
         $c->stash->{supervisor} = $session->get('supervisor');
         $c->stash->{username} = $session->get('username');
