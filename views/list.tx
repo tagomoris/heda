@@ -123,7 +123,7 @@
 
 
 <form class="form-search">
-  <input type="text" class="input-medium search-query" name="sm" placeholder="memo search text">
+  <input type="text" class="input-medium search-query" name="sm" placeholder="memo search text" value="<: $search_memo :>">
   <button type="submit" class="btn">Memo Search</button>
 </form>
 : }
