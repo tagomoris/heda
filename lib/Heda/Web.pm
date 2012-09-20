@@ -253,10 +253,17 @@ get '/logout' => [qw/require_supervisor_login/] => sub {
 
 get '/list' => [qw/require_supervisor_login/] => sub {
     my ( $self, $c ) = @_;
-    my $list = $self->users->all();
-
     my $sort = $c->req->param('s') || 'u';
     my $order = $c->req->param('o') || 'a';
+    my $search_memo = $c->req->param('sm') || undef;
+    my $show_memo = $c->req->param('m') || defined($search_memo);
+
+    my $list;
+    if ($search_memo) {
+        $list = $self->users->memo_search($search_memo);
+    } else { # all
+        $list = $self->users->all();
+    }
 
     if ($sort eq 'u') { #username
         $list = [sort { $a->{username} cmp $b->{username} } @$list];
@@ -283,6 +290,9 @@ get '/list' => [qw/require_supervisor_login/] => sub {
 
     $c->render('list.tx', +{
         list => $list,
+        search => $search_memo,
+        search_memo => $search_memo,
+        memo => $show_memo,
         notification => $notification,
         sort => $sort,
         order => $order,

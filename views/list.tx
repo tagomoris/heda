@@ -13,46 +13,53 @@
 
 <h2>Users</h2>
 
-<table class="table">
+: if $search_memo.length() > 0 {
+<div class="alert alert-info">
+  <a href="<: $c.req.uri_for('/list') :>?s=<: $sort :>&o=<: $order :>" class="close">×</a>
+  <strong>Memo search: </strong><: $search_memo :>
+</div>
+: }
+
+<table class="table<: $memo ? ' table-striped' : '' :>">
   <tr>
     <th></th>
     <th class="sort<: $sort == 'u' ? ' selected' : '' :>">
       : if $sort != "u" {
-      <a href="<: $c.req.uri_for('/list') :>?s=u&o=a">Username</a>
+      <a href="<: $c.req.uri_for('/list') :>?s=u&o=a&sm=<: $search_memo || '' :>">Username</a>
       : } elsif $order == 'a' {
-      <a href="<: $c.req.uri_for('/list') :>?s=u&o=d">Username<i class="icon-chevron-down"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=u&o=d&sm=<: $search_memo || '' :>">Username<i class="icon-chevron-down"></i></a>
       : } else {
-      <a href="<: $c.req.uri_for('/list') :>?s=u&o=a">Username<i class="icon-chevron-up"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=u&o=a&sm=<: $search_memo || '' :>">Username<i class="icon-chevron-up"></i></a>
       : }
     </th>
     <th>Fullname</th>
     <th class="sort<: $sort == 'e' ? ' selected' : '' :>">
       : if $sort != "e" {
-      <a href="<: $c.req.uri_for('/list') :>?s=e&o=a">Mail Address</a>
+      <a href="<: $c.req.uri_for('/list') :>?s=e&o=a&sm=<: $search_memo || '' :>">Mail Address</a>
       : } elsif $order == 'a' {
-      <a href="<: $c.req.uri_for('/list') :>?s=e&o=d">Mail Address<i class="icon-chevron-down"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=e&o=d&sm=<: $search_memo || '' :>">Mail Address<i class="icon-chevron-down"></i></a>
       : } else {
-      <a href="<: $c.req.uri_for('/list') :>?s=e&o=a">Mail Address<i class="icon-chevron-up"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=e&o=a&sm=<: $search_memo || '' :>">Mail Address<i class="icon-chevron-up"></i></a>
       : }
     </th>
     <th class="sort<: $sort == 's' ? ' selected' : '' :>">
       : if $sort != "s" {
-      <a href="<: $c.req.uri_for('/list') :>?s=s&o=a">SubID</a>
+      <a href="<: $c.req.uri_for('/list') :>?s=s&o=a&sm=<: $search_memo || '' :>">SubID</a>
       : } elsif $order == 'a' {
-      <a href="<: $c.req.uri_for('/list') :>?s=s&o=d">SubID<i class="icon-chevron-down"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=s&o=d&sm=<: $search_memo || '' :>">SubID<i class="icon-chevron-down"></i></a>
       : } else {
-      <a href="<: $c.req.uri_for('/list') :>?s=s&o=a">SubID<i class="icon-chevron-up"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=s&o=a&sm=<: $search_memo || '' :>">SubID<i class="icon-chevron-up"></i></a>
       : }
     </th>
     <th>Accounts</th>
     <th><!-- INVALID / Supervisor --></th>
     <th class="sort<: $sort == 'm' ? ' selected' : '' :>">
       : if $sort != "m" {
-      <a href="<: $c.req.uri_for('/list') :>?s=m&o=a">Last modified</a>
+      <a href="<: $c.req.uri_for('/list') :>?s=m&o=a&sm=<: $search_memo || '' :>">Last modified</a>
       : } elsif $order == 'a' {
-      <a href="<: $c.req.uri_for('/list') :>?s=m&o=d">Last modified<i class="icon-chevron-down"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=m&o=d&sm=<: $search_memo || '' :>">Last modified<i class="icon-chevron-down"></i></a>
       : } else {
-      <a href="<: $c.req.uri_for('/list') :>?s=m&o=a">Last modified<i class="icon-chevron-up"></i></a>
+      <a href="<: $c.req.uri_for('/list') :>?s=m&o=a&sm=<: $search_memo || '' :>">Last modified<i class="icon-chevron-up"></i></a>
       : }
     </th>
   </tr>
@@ -104,7 +111,19 @@
     </td>
     <td><: $user.modified_at :></td>
   </tr>
-  : }
+  : if $memo {
+  <tr>
+    <td></td>
+    <td style="text-align: right; color: #808080;">Memo</td>
+    <td colspan=6><pre><: $user.memo :></pre></td>
+  </tr>
+  : } # memo
+  : } # user
 </table>
 
+
+<form class="form-search">
+  <input type="text" class="input-medium search-query" name="sm" placeholder="memo search text">
+  <button type="submit" class="btn">Memo Search</button>
+</form>
 : }
