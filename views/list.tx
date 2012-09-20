@@ -12,6 +12,13 @@
 : around content -> {
 
 <h2>Users</h2>
+<div>
+: if $memo {
+  <a href="<: $c.req.uri_for('/list') :>?m=">Show all users without Memo</a>
+: } else {
+  <a href="<: $c.req.uri_for('/list') :>?m=1">Show all users with Memo</a>
+: }
+</div>
 
 : if $search_memo.length() > 0 {
 <div class="alert alert-info">

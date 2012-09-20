@@ -115,6 +115,7 @@ filter 'require_supervisor_login' => sub {
         my $session = $self->session($c->req);
 
         unless ($session->get('authenticated') and $session->get('supervisor')) {
+            $session->set('show_path', $c->req->uri->path_query);
             return $c->redirect('/login');
         }
         $c->stash->{supervisor} = $session->get('supervisor');
@@ -241,7 +242,10 @@ post '/login' => [qw/check_supervisor_login/] => sub {
 
     $c->stash->{session}->set('authenticated', 1);
     $c->stash->{session}->set('supervisor', 1);
-    $c->redirect('/list');
+
+    my $path = $c->stash->{session}->remove('show_path');
+    $path ||= '/list';
+    $c->redirect($path);
 };
 
 get '/logout' => [qw/require_supervisor_login/] => sub {
