@@ -6,7 +6,6 @@ use Log::Minimal;
 
 use DBI;
 use DBIx::Sunny;
-# use Scope::Container::DBI;
 
 use Digest::SHA qw//;
 
@@ -68,6 +67,15 @@ sub search {
 SELECT $columns FROM users WHERE $col=?
 EOQ
     $self->dbh->select_row($sql, $value);
+}
+
+sub memo_search { # heavy call: DON'T USE FROM slapd handler
+    my ($self, $word) = @_;
+    my $columns = $COLUMNS_VIEW;
+    my $sql = <<"EOQ";
+SELECT $columns FROM users WHERE memo LIKE ?
+EOQ
+    $self->dbh->select_all($sql, '%' . $word . '%');
 }
 
 sub authenticate { # authenticate( fieldname => $value, password => $password_value, bypass_validation => $bool )
