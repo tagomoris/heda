@@ -62,7 +62,7 @@ th.selected {
         <li><a href="<: $c.req.uri_for('/create') :>">Add User</a></li>
         <li><a href="<: $c.req.uri_for('/logout') :>">Logout</a></li>
         : } else {
-        <li><a href="<: $c.req.uri_for('/login') :>">Login</a></li>
+        <li><a href="<: $c.req.uri_for('/login') :>">Admin</a></li>
         : }
       </ul>
     </div>
