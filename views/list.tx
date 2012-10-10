@@ -14,11 +14,11 @@
 <h3>Links</h3>
 <div class="btn-group">
 : if $memo {
-  <button class="btn"><a href="<: $c.req.uri_for('/list') :>?m=">Show all users without Memo</a></button>
+  <a href="<: $c.req.uri_for('/list') :>?m="><button class="btn">Show all users without Memo</button></a>
 : } else {
-  <button class="btn"><a href="<: $c.req.uri_for('/list') :>?m=1">Show all users with Memo</a></button>
+  <a href="<: $c.req.uri_for('/list') :>?m=1"><button class="btn">Show all users with Memo</button></a>
 : }
-  <button class="btn"><a href="<: $c.req.uri_for('/list/csv') :>">Download CSV</a></button>
+  <a href="<: $c.req.uri_for('/list/csv') :>"><button class="btn">Download CSV</button></a>
 </div>
 
 
