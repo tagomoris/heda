@@ -7,6 +7,7 @@ use Log::Minimal;
 use Try::Tiny;
 use List::Util;
 use Time::Piece;
+use Encode;
 
 use Heda::Util;
 use Heda::Config;
@@ -310,7 +311,10 @@ get '/list/csv' => [qw/require_supervisor_login/] => sub {
     my ( $self, $c ) = @_;
     my $list = $self->users->all(full => 1);
 
-    my $csv = Text::CSV::Encoded->new ({ encoding  => "utf8", always_quote => 1 })
+    my $csv = Text::CSV::Encoded->new ({
+        encoding_in => "utf8", encoding_out => "shiftjis",
+        always_quote => 1
+    })
         or die "Cannot use Text::CSV, " . Text::CSV->error_diag();
 
     my @csv_cols = @Heda::Users::COLUMNS_VIEW_FULL;
@@ -321,11 +325,11 @@ get '/list/csv' => [qw/require_supervisor_login/] => sub {
 
     my $to_arrayref = sub {
         my %user = @_;
-        [map { $user{$_} } @csv_cols ];
+        [map { Encode::decode_utf8($user{$_}) } @csv_cols ];
     };
     my $data = join("\r\n", $head, map { $csv->combine(@$_); $csv->string(); } map { $to_arrayref->(%$_) } @$list);
     my $today = Time::Piece->new()->strftime('%Y%m%d');
-    [200, { 'Content-Disposition' => "attachment; filename=\"heda_users.$today.csv\"", 'Content-Type' => 'text/csv' }, $data];
+    [200, { 'Content-Disposition' => "attachment; filename=\"heda_users.$today.sjis.csv\"", 'Content-Type' => 'text/csv' }, $data];
 };
 
 get '/create' => [qw/require_supervisor_login/] => sub {
