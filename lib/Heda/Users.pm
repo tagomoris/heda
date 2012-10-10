@@ -38,12 +38,17 @@ sub salt {
 
 # our @FULL_COLUMNS = qw(id subid username passhash fullname mailaddress salt valid superuser accounts memo created_at modified_at);
 our $COLUMNS_VIEW = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo,salt,modified_at';
+our $COLUMNS_VIEW_FULL = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo,created_at,modified_at';
 our $COLUMNS_AUTH = 'id,subid,username,fullname,mailaddress,valid,superuser,accounts,memo,salt,passhash,modified_at';
 
+our @COLUMNS_VIEW_FULL = split(/,/, $COLUMNS_VIEW_FULL);
+
 sub all {
-    my ($self) = @_;
+    my ($self,%opts) = @_;
+    my $columns = $COLUMNS_VIEW;
+    $columns = $COLUMNS_VIEW_FULL if $opts{full};
     my $sql = <<"EOQ";
-SELECT $COLUMNS_VIEW FROM users
+SELECT $columns FROM users
 EOQ
     $self->dbh->select_all($sql);
 }

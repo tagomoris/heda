@@ -11,14 +11,18 @@
 
 : around content -> {
 
-<h2>Users</h2>
-<div>
+<h3>Links</h3>
+<div class="btn-group">
 : if $memo {
-  <a href="<: $c.req.uri_for('/list') :>?m=">Show all users without Memo</a>
+  <button class="btn"><a href="<: $c.req.uri_for('/list') :>?m=">Show all users without Memo</a></button>
 : } else {
-  <a href="<: $c.req.uri_for('/list') :>?m=1">Show all users with Memo</a>
+  <button class="btn"><a href="<: $c.req.uri_for('/list') :>?m=1">Show all users with Memo</a></button>
 : }
+  <button class="btn"><a href="<: $c.req.uri_for('/list/csv') :>">Download CSV</a></button>
 </div>
+
+
+<h2>Users</h2>
 
 : if $search_memo.length() > 0 {
 <div class="alert alert-info">

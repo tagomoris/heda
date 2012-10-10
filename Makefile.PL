@@ -24,6 +24,7 @@ WriteMakefile(
         'DBIx::Sunny' => 0,
         'Net::LDAP::Filter' => 0,
         'Text::CSV' => 0,
+        'Text::CSV::Encoded' => 0,
     },
     MIN_PERL_VERSION => '5.014001'
 );
