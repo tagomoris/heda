@@ -41,9 +41,9 @@ distinguishedName: $dn
 cn: $username
 name: $username
 givenName: $username
-sAMAccountName: $username
+sAMAccountName: $subid
 displayName: $fullname
-uid: $subid
+uid: $username
 description: $subid
 mail: $mailaddress
 EOT
@@ -55,8 +55,8 @@ sub parse {
 
     my $conv = sub {
         my ($attr,$val) = @_;
-        return ['username', $val] if $attr =~ m!^(cn|name|givenName|sAMAccountName)$!i;
-        return ['subid', $val] if $attr =~ m!^(uid)$!i;
+        return ['username', $val] if $attr =~ m!^(cn|name|givenName|uid)$!i;
+        return ['subid', $val] if $attr =~ m!^(sAMAccountName)$!i;
         return ['mail', $val] if $attr =~ m!^(mail)$!i;
         return undef;
     };
