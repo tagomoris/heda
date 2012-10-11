@@ -132,18 +132,11 @@ filter 'require_supervisor_login' => sub {
 
 get '/' => [qw/check_supervisor_login/] => sub {
     my ( $self, $c )  = @_;
-    my ($autherrors);
-    my ($inputvalues, $errors);
-    if ($c->req->referer) {
-        $autherrors = $c->stash->{session}->remove('autherrors');
-        $inputvalues = $c->stash->{session}->remove('inputvalues');
-        $errors = $c->stash->{session}->remove('errors');
-    }
-    else {
-        $c->stash->{session}->remove('autherrors');
-        $c->stash->{session}->remove('inputvalues');
-        $c->stash->{session}->remove('errors');
-    }
+
+    my $autherrors = $c->stash->{session}->remove('autherrors');
+    my $inputvalues = $c->stash->{session}->remove('inputvalues');
+    my $errors = $c->stash->{session}->remove('errors');
+
     $autherrors ||= +{ password => { flag => 0, message => '' } };
     $inputvalues ||= +{};
     $errors ||= +{
