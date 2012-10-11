@@ -152,6 +152,14 @@ EOQ
     $self->dbh->query($sql, $passhash, $salt, $id);
 }
 
+sub force_envalidate {
+    my ($self, $id) = @_;
+    my $sql = <<EOQ;
+UPDATE users SET valid=1,modified_at=NOW() WHERE id=?
+EOQ
+    $self->dbh->query($sql, $id);
+}
+
 sub delete {
     my ($self, $id) = @_;
     my $sql = <<EOQ;

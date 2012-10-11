@@ -572,6 +572,39 @@ post '/reset' => [qw/require_supervisor_login/] => sub {
     $c->render('created.tx', { reset => 1, user => $user });
 };
 
+get '/envalidate/:username' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my $user = $self->users->search( username => $c->args->{username} );
+    return $c->halt(404, 'specified username not found.') unless $user;
+
+    my ($pin, $hidden, $hash) = Heda::Util::gen_pincode();
+    $c->stash->{session}->set('danger_op_key', $hash);
+
+    $c->render('dialog.tx', { op => 'envalidate', username => $user->{username}, pin => $pin, hidden => $hidden });
+};
+
+post '/envalidate' => [qw/require_supervisor_login/] => sub {
+    my ( $self, $c ) = @_;
+
+    my ($pin, $hidden) = ($c->req->param('pin'), $c->req->param('hidden'));
+    my $user = $self->users->search( username => $c->req->param('username') );
+    return $c->halt(404, 'specified username not found.') unless $user;
+
+    my $hash = $c->stash->{session}->remove('danger_op_key');
+    unless ($hash and Heda::Util::check_pincode($pin, $hidden, $hash)) {
+        return $c->halt(400, 'not operated correctly.');
+    }
+    $self->users->force_envalidate($user->{id});
+
+    my $notification = +{
+        subject => 'Success!',
+        message => 'to envalidate user ' . $user->{username} . ' forcely',
+    };
+    $c->stash->{session}->set('notification', $notification);
+    $c->redirect('/list');
+};
+
 get '/remove/:username' => [qw/require_supervisor_login/] => sub {
     my ( $self, $c ) = @_;
 

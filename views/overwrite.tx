@@ -69,6 +69,7 @@
     <div class="controls form-actions">
       <button type="submit" class="btn btn-primary">Update</button>
       <a class="btn" href="<: $c.req.uri_for('/list') :>">Cancel</a>
+      <a class="btn btn-info" href="<: $c.req.uri_for('/envalidate/'~$user.username) :>">Set enable</a>
       <a class="btn btn-warning" href="<: $c.req.uri_for('/reset/'~$user.username) :>">Reset password</a>
       <a class="btn btn-danger" href="<: $c.req.uri_for('/remove/'~$user.username) :>">Delete account</a>
     </div>
