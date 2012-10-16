@@ -165,14 +165,15 @@ sub search {
 }
 
 sub bind {
+    # http://www.openldap.org/doc/admin24/appendix-ldap-result-codes.html
     my ($self, $dn, $cred) = @_;
     debugf "Called method 'bind': %s", {dn => $dn, cred => $cred};
-    my $bind_pair = $self->parse($dn, '(thi=is dummy)');
+    my $bind_pair = $self->parse($dn, '(this=is dummy)');
     if ($bind_pair->[0] ne 'username') {
-        return (1); # invalid dn for bind
+        return (34); # invalidDNSyntax
     }
     return (0) if $self->users->authenticate(username => $bind_pair->[1], password => $cred);
-    return (1); # failed
+    return (49); # invalidCredentials
 }
 
 sub compare {
