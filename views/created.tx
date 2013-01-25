@@ -59,18 +59,9 @@
 
 <div class="span8">
 <pre>
-username: <: $user.username :>
+id: <: $user.username :>
 : if $user.password {
 password: <: $user.password :>
-: }
-
-fullname: <: $user.fullname :>
-subid: <: $user.subid :>
-mail: <: $user.mailaddress :>
-
-other accounts:
-: for $user.account_list -> $a {
-  <: $a.key :> : <: $a.val :>
 : }
 
 To enable your account:
